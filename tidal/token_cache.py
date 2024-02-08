@@ -1,3 +1,5 @@
+"""Utilities for retrieval and storage of access tokens"""
+
 import os
 import pickle
 
@@ -7,9 +9,12 @@ from .types.token import Token
 
 
 class TokenCache:
+    """Stores and retrieves access tokens, requests new tokens upon expiry.\n
+    Get active token using `.get_token()`"""
+
     def __init__(self, auth: httpx.BasicAuth) -> None:
         self.token: Token | None = None
-        self._auth = auth
+        self.auth = auth
         self.http = httpx.Client(http2=True, follow_redirects=True)
 
     def _read_cache(self) -> bool:
@@ -31,15 +36,17 @@ class TokenCache:
             pickle.dump(self.token, f, pickle.HIGHEST_PROTOCOL)
 
     def _request_token(self):
-        response = self.http.post(
-            url="https://auth.tidal.com/v1/oauth2/token",
+        request = self.http.build_request(
+            "POST",
+            "https://auth.tidal.com/v1/oauth2/token",
+            data="grant_type=client_credentials",
             headers={
-                "Authorization": self._auth._auth_header,
                 "Content-type": "application/x-www-form-urlencoded",
                 "Accept": "application/json,text/plain",
             },
-            data="grant_type=client_credentials",
         )
+        print(request.url)
+        response = self.http.send(request, auth=self.auth)
         response.raise_for_status()
         data: dict = response.json()
         self.token = Token(
@@ -50,8 +57,8 @@ class TokenCache:
         self._write_cache()
 
     def get_token(self) -> Token:
-        if self.token and not self.token.is_valid():
-            self._request_token()
         if not self.token and not self._read_cache():
+            self._request_token()
+        if self.token and not self.token.is_valid():
             self._request_token()
         return self.token
