@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "tidal"
+version = "0.1.0"
+description = "Advanced python API wrapper for Tidal music"
+authors = ["Alexander Johnson <alexjohnson2004@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+httpx = {extras = ["http2"], version = "^0.26.0"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
