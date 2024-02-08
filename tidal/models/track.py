@@ -6,7 +6,7 @@ from .album import Album
 from .artist import NestedArtist
 from .base import BaseType
 from .metadata import MediaMetadata
-from .properties import Properties
+from .resource import Properties
 
 
 class Track(BaseType):

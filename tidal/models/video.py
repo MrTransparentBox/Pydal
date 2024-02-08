@@ -5,8 +5,8 @@ from typing import Literal
 from .album import Album
 from .artist import NestedArtist
 from .base import BaseType
-from .picture import Picture
-from .properties import Properties
+from .media import Picture
+from .resource import Properties
 
 
 class Video(BaseType):

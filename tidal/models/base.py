@@ -1,3 +1,5 @@
+"""Base types for other models"""
+
 from typing import TypedDict
 
 

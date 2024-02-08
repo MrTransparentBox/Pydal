@@ -45,7 +45,6 @@ class TokenCache:
                 "Accept": "application/json,text/plain",
             },
         )
-        print(request.url)
         response = self.http.send(request, auth=self.auth)
         response.raise_for_status()
         data: dict = response.json()

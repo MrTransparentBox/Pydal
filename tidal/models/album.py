@@ -1,13 +1,17 @@
+"""Album api models"""
+
 from typing import Literal
 
 from .artist import NestedArtist
 from .base import BaseType
+from .media import Picture
 from .metadata import MediaMetadata
-from .picture import Picture
-from .properties import Properties
+from .resource import Properties
 
 
 class Album(BaseType):
+    """Base album type for track requests"""
+
     id: str
     title: str
     imageCover: list[Picture]
@@ -15,6 +19,8 @@ class Album(BaseType):
 
 
 class FullAlbum(Album):
+    """Full album info as given in /albums requests"""
+
     barcodeId: str
     artists: list[NestedArtist]
     duration: int
@@ -22,7 +28,7 @@ class FullAlbum(Album):
     numberOfVolumes: int
     numberOfTracks: int
     numberOfVideos: int
-    type: Literal["ALBUM"]
+    type: Literal["ALBUM"] | Literal["SINGLE"]
     copyright: str
     mediaMetadata: MediaMetadata
     properties: Properties
