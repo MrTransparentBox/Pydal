@@ -1,10 +1,19 @@
 """Provides main client class"""
 
-from typing import Sequence
+from typing import Iterable
 
 import httpx
 
-from .models import *
+from .models import (
+    BaseType,
+    DataItems,
+    ExpandedDataItems,
+    ExpandedResource,
+    FullAlbum,
+    FullArtist,
+    Track,
+    Video,
+)
 from .token_cache import TokenCache
 
 
@@ -34,7 +43,7 @@ class TidalClient:
             "Authorization": f"Bearer {self._cache.get_token().access_token}",
         }
 
-    async def _api_call(self, url: str) -> dict:
+    async def _api_call(self, url: str) -> BaseType:
         response = await self.http.get(
             url,
             headers=self.default_headers,
@@ -42,6 +51,91 @@ class TidalClient:
         response.raise_for_status()
         return response.json()
 
+    # region albums
+    async def album(self, album_id: str, country_code: str) -> FullAlbum:
+        """Requests to the /albums/{id} endpoint.
+        Raises:
+            HTTPStatusError: HTTP request didn't return 2xx code
+        """
+        return await self._api_call(f"/albums/{album_id}?countryCode={country_code}")["resource"]
+
+    async def many_albums(self, ids: Iterable[str], country_code: str) -> ExpandedDataItems[FullAlbum]:
+        """Requests to the /albums?ids={ids} endpoint.
+        Raises:
+            HTTPStatusError: HTTP request didn't return 2xx code
+        """
+        return await self._api_call(f"/artists?ids={'%2C'.join(ids)}&countryCode={country_code}")
+
+    async def album_items(
+        self, album_id: str, country_code: str, offset: int = 0, limit: int | None = None
+    ) -> ExpandedDataItems[Track]:
+        """Requests to the /albums/{id}/items endpoint.
+        Raises:
+            HTTPStatusError: HTTP request didn't return 2xx code
+        """
+        url = f"/albums/{album_id}/items?countryCode={country_code}&offset={offset}"
+        if limit is not None:
+            url += f"&limit={limit}"
+        return await self._api_call(url)
+
+    async def album_by_barcode(self, barcode_id: str, country_code: str) -> FullAlbum:
+        """Requests to the /albums/byBarcodeId?barcodeId={barcode_id} endpoint.
+        Raises:
+            HTTPStatusError: HTTP request didn't return 2xx code
+        """
+        result: ExpandedDataItems[FullAlbum] = await self._api_call(
+            f"/albums/byBarcodeId?barcodeId={barcode_id}&countryCode={country_code}"
+        )
+        return result["data"][0]["resource"]
+
+    async def similar_albums(self, album_id: str, country_code: str, offset: int = 0, limit: int = 10) -> DataItems:
+        """Requests to the /albums/{id}/similar endpoint.
+        Raises:
+            HTTPStatusError: HTTP request didn't return 2xx code
+        """
+        return await self._api_call(
+            f"/albums/{album_id}/similar?countryCode={country_code}&offset={offset}&limit={limit}"
+        )
+
+    async def albums_by_artist(
+        self, artist_id: str, country_code: str, offset: int = 0, limit: int = 10
+    ) -> ExpandedDataItems[FullAlbum]:
+        """Requests to the /artists/{id}/albums endpoint.
+        Raises:
+            HTTPStatusError: HTTP request didn't return 2xx code
+        """
+        return await self._api_call(
+            f"/artists/{artist_id}/albums?countryCode={country_code}&offset={offset}&limit={limit}"
+        )
+
+    # endregion
+    # region artists
+    async def artist(self, artist_id: str, country_code: str) -> FullArtist:
+        """Requests to the /artists/{id} endpoint.
+        Raises:
+            HTTPStatusError: HTTP request didn't return 2xx code
+        """
+        result: ExpandedResource[FullArtist] = await self._api_call(f"/artists/{artist_id}?countryCode={country_code}")
+        return result["resource"]
+
+    async def many_artists(self, ids: Iterable[str], country_code: str) -> ExpandedDataItems[FullArtist]:
+        """Requests to the /artists?ids={ids} endpoint.
+        Raises:
+            HTTPStatusError: HTTP request didn't return 2xx code
+        """
+        return await self._api_call(f"/artists?ids={'%2C'.join(ids)}&countryCode={country_code}")
+
+    async def similar_artists(self, artist_id: str, country_code: str, offset: int = 0, limit: int = 10) -> DataItems:
+        """Requests to the /artists/{id}/similar endpoint.
+        Raises:
+            HTTPStatusError: HTTP request didn't return 2xx code
+        """
+        return await self._api_call(
+            f"/artists/{artist_id}/similar?countryCode={country_code}&offset={offset}&limit={limit}"
+        )
+
+    # endregion
+    # region tracks
     async def track(self, track_id: str, country_code: str) -> Track:
         """Requests to the /tracks/{id} endpoint.
         Raises:
@@ -49,7 +143,7 @@ class TidalClient:
         """
         return (await self._api_call(f"/tracks/{track_id}?countryCode={country_code}"))["resource"]
 
-    async def many_tracks(self, ids: Sequence[str], country_code: str) -> ExpandedDataItems[Track]:
+    async def many_tracks(self, ids: Iterable[str], country_code: str) -> ExpandedDataItems[Track]:
         """Requests to the /tracks?ids={ids} endpoint.
         Raises:
             HTTPStatusError: HTTP request didn't return 2xx code
@@ -57,7 +151,7 @@ class TidalClient:
         return await self._api_call(f"/tracks?ids={'%2C'.join(ids)}&countryCode={country_code}")
 
     async def similar_tracks(self, track_id: str, country_code: str, offset: int = 0, limit: int = 10) -> DataItems:
-        """/tracks/{id}/similar.
+        """Requests to the /tracks/{id}/similar endpoint.
         Raises:
             HTTPStatusError: HTTP request didn't return 2xx code"""
         return await self._api_call(
@@ -71,6 +165,9 @@ class TidalClient:
         """
         return (await self._api_call(f"/tracks/byIsrc?isrc={isrc}&countryCode={country_code}"))["data"][0]["resource"]
 
+    # endregion
+    # region video
+
     async def video(self, track_id: str, country_code: str) -> Video:
         """Requests to the /videos/{id} endpoint.
         Raises:
@@ -78,9 +175,12 @@ class TidalClient:
         """
         return (await self._api_call(f"/videos/{track_id}?countryCode={country_code}"))["resource"]
 
-    async def many_videos(self, ids: Sequence[str], country_code: str) -> ExpandedDataItems[Video]:
+    async def many_videos(self, ids: Iterable[str], country_code: str) -> ExpandedDataItems[Video]:
         """Requests to the /tracks?ids={ids} endpoint.
         Raises:
             HTTPStatusError: HTTP request didn't return 2xx code
         """
         return await self._api_call(f"/videos?ids={'%2C'.join(ids)}&countryCode={country_code}")
+
+
+# endregion
