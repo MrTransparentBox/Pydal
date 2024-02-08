@@ -1,3 +1,5 @@
+"""Provides music track API model"""
+
 from typing import Literal
 
 from .album import Album
@@ -8,6 +10,8 @@ from .properties import Properties
 
 
 class Track(BaseType):
+    """Music track API dict type"""
+
     artifactType: Literal["track"]
     id: str
     title: str

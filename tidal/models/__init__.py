@@ -1,3 +1,5 @@
+"""Contains API data model types"""
+
 from .album import *
 from .artist import *
 from .base import *

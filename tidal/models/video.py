@@ -1,3 +1,5 @@
+"""Provides video API model"""
+
 from typing import Literal
 
 from .album import Album
@@ -8,6 +10,8 @@ from .properties import Properties
 
 
 class Video(BaseType):
+    """Video API dict type"""
+
     artifactType: Literal["video"]
     id: str
     title: str
