@@ -4,7 +4,7 @@ An advanced Python API wrapper for tidal music.
 ### Using pip
 The package can be installed in Python environments using package managers like pip.
 ```bat
-pip install -U tidal
+pip install -U tidal-ng
 ```
 ## Basic usage
 First, register an app at the [Tidal dev dashboard](https://developer.tidal.com/dashboard) to obtain a client ID and secret
