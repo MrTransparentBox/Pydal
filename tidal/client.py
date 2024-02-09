@@ -43,6 +43,10 @@ class TidalClient:
             "Authorization": f"Bearer {self._cache.get_token().access_token}",
         }
 
+    def process_url(self, url: str):
+        """Takes a tidal resource URL and returns its ID"""
+        return url[url.rindex("/") + 1 :]
+
     async def _api_call(self, url: str) -> BaseType:
         response = await self.http.get(
             url,
