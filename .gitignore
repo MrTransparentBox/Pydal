@@ -3,3 +3,4 @@
 .vscode
 .token_cache
 .env
+dist/
